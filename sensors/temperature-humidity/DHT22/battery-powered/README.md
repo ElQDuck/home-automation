@@ -5,13 +5,14 @@ Used Hardware
 - Wifi connection: [NRF24L01 2.4GHz]()
 - Battery: 2 x AA-Battery
 - Programmer: [FTDI USB to TTL Serial Adapter](https://www.mikrocontroller.net/topic/435491)
-  - [Drivers](https://ftdichip.com/drivers/)
+    - [Drivers](https://ftdichip.com/drivers/)
 
 ## Development Environment Setup
 1. Install [Visual Studio Code](https://code.visualstudio.com/download)
 2. Install [Arduino IDE](https://www.arduino.cc/en/software)
 3. Install the [Arduino Extension](https://marketplace.visualstudio.com/items?itemName=vsciot-vscode.vscode-arduino) in Visual Studio Code
 4. Install [KiCad]()
+    1. [Arduino Libary](https://github.com/Duckle29/kicad-libraries)
 5. (Alternative) install [FreeCAD]()
 
 ## Wiring
