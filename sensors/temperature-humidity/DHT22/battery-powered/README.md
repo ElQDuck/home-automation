@@ -9,8 +9,7 @@ Used Hardware
 
 ## Development Environment Setup
 1. Install [Visual Studio Code](https://code.visualstudio.com/download)
-2. Install [Arduino IDE](https://www.arduino.cc/en/software)
-3. Install the [Arduino Extension](https://marketplace.visualstudio.com/items?itemName=vsciot-vscode.vscode-arduino) in Visual Studio Code
+2. Install [PlatformIO IDE](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide)
 4. Install [KiCad]()
     1. [Arduino Libary](https://github.com/Duckle29/kicad-libraries)
 5. (Alternative) install [FreeCAD]()
