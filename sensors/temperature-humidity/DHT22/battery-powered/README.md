@@ -12,6 +12,11 @@ Used Hardware
 2. Install [PlatformIO IDE](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide)
 4. Install [KiCad]()
     1. [Arduino Libary](https://github.com/Duckle29/kicad-libraries)
+    2. [NRF24L01 Library](https://github.com/myelin/myelin-kicad-libraries)
+    3. [DHT22 Sensor Library](https://github.com/skorokithakis/kicad-lib.git)
+    
+    [//]: # (TODO: Move libs into repository)
+    
 5. (Alternative) install [FreeCAD]()
 
 ## Wiring
