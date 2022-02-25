@@ -59,7 +59,7 @@ metadata:
   name: mosquitto
 spec:
   externalIPs:
-  - xxx.xxx.xxx.xxx  # <-- Enter here the IP of your Raspberry Pi
+  - xxx.xxx.xxx.xxx  # <-- Enter here the IP of your Raspberry Pi to get access from outside kubernetes
   type: ClusterIP
   ports:
     - name: mqtt
