@@ -1,7 +1,7 @@
 # A battery powered temperature and humidity sensor
 Used Hardware
 - Sensor: [DHT22]()
-- Microcontroller: [Arduino Pro Mini 3.3V 8MHz]()
+- Microcontroller: [Arduino Pro Mini ATmega328 3.3V 8MHz ]()
 - Wifi connection: [NRF24L01 2.4GHz]()
 - Battery: 2 x AA-Battery
 - Programmer: [FTDI USB to TTL Serial Adapter](https://www.mikrocontroller.net/topic/435491)
