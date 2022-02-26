@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openhab
+  labels:
+    app: openhab
+---
+# https://lookslikematrix.de/server/2021/06/22/openhab-homematic.html
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: openhab
+  name: openhab-pvc-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: microk8s-hostpath # <-- preinstalled with "microk8s enable storage"
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: openhab
+  name: openhab-pvc-conf
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: microk8s-hostpath # <-- preinstalled with "microk8s enable storage"
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: openhab
+  name: openhab-deployment
+  labels:
+    app: openhab
+spec:
+  selector:
+    matchLabels:
+      app: openhab
+  template:
+    metadata:
+      labels:
+        app: openhab
+    spec:
+      containers:
+      - name: openhab
+        image: openhab/openhab # <-- use the latest version
+        volumeMounts:
+        - name: openhab-data
+          mountPath: /openhab/userdata
+        - name: openhab-conf
+          mountPath: /openhab/conf
+      volumes:
+      - name: openhab-data
+        persistentVolumeClaim:
+          claimName: openhab-pvc-data
+      - name: openhab-conf
+        persistentVolumeClaim:
+          claimName: openhab-pvc-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: openhab
+  name: openhab-frontend-service
+spec:
+  type: ClusterIP
+  selector:
+    app: openhab
+  ports:
+    - protocol: TCP
+      name: service
+      port: 8080
+  externalIPs:
+  - xxx.xxx.xxx.xxx # <-- Enter here the IP of your Raspberry Pi to get access from outside kubernetes
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: openhab
+  name: openhab-homematic-service
+spec:
+  type: ClusterIP
+  selector:
+    app: openhab
+  ports:
+    - protocol: UDP
+      name: xml-rpc
+      port: 9125
+  externalIPs:
+  - xxx.xxx.xxx.xxx # <-- Enter here the IP of your Raspberry Pi to get access from outside kubernetes
