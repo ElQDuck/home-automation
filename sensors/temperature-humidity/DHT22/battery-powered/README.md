@@ -20,3 +20,6 @@ Used Hardware
 5. (Alternative) install [FreeCAD]()
 
 ## Wiring
+
+## Programming
+!Attention! After pressing the upload button press the reset button on the Arduino pro mini.

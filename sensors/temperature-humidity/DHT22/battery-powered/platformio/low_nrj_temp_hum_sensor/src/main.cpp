@@ -1,9 +1,22 @@
 #include <Arduino.h>
+#include "DHT.h"
 
-void setup() {
-  // put your setup code here, to run once:
+DHT dht;
+
+void setup()
+{
+  Serial.begin(9600);
+
+  dht.setup(3); // data pin 3
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
+void loop()
+{
+  delay(dht.getMinimumSamplingPeriod());
+
+  Serial.print("\nFeuchtigkeit: ");
+  Serial.print(dht.getHumidity());
+  Serial.print("\nTemperature: ");
+  Serial.print(dht.getTemperature());
+  Serial.print("\n");
 }
