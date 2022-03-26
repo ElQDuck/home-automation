@@ -10,6 +10,10 @@ Used Hardware
 ## Development Environment Setup
 1. Install [Visual Studio Code](https://code.visualstudio.com/download)
 2. Install [PlatformIO IDE](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide)
+    1. C++ libraries:
+        1. [DHT](https://github.com/markruys/arduino-DHT)
+        2. [rapidjson](https://github.com/Tencent/rapidjson)
+        3. [ArduinoUniqueID](https://github.com/ricaun/ArduinoUniqueID)
 4. Install [KiCad]()
     1. [Arduino Libary](https://github.com/Duckle29/kicad-libraries)
     2. [NRF24L01 Library](https://github.com/myelin/myelin-kicad-libraries)
