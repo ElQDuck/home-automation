@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include <ArduinoUniqueID.h>
 #include "DHT.h"
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
 
 // Function Declarations
 String GetArduinoUniqueID();
@@ -8,13 +11,21 @@ long readVcc();
 
 // Constants
 const String ARDUINO_ID = GetArduinoUniqueID(); // The unique Arduino ID
+const byte address[6] = "00001";
 
 DHT dht; // The DHT Sensor
+RF24 radio(9, 10); // CE, CSN
 
 void setup()
 {
   Serial.begin(9600);
   dht.setup(3); // data pin 3
+
+  // RF24
+  radio.begin();
+  radio.openWritingPipe(address);
+  radio.setPALevel(RF24_PA_MIN);
+  radio.stopListening();
 }
 
 void loop()
@@ -42,6 +53,11 @@ void loop()
   Serial.print("Battery voltage: ");
   Serial.print(readVcc());
   Serial.print("mV\n");
+
+  // Send data
+  const char text[] = "Hello World";
+  radio.write(&text, sizeof(text));
+  delay(1000);
 }
 
 // Function to get the ArduinoUniqueID
