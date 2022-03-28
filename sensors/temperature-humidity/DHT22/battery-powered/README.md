@@ -15,6 +15,7 @@ Used Hardware
         2. [rapidjson](https://github.com/Tencent/rapidjson)
         3. [ArduinoUniqueID](https://github.com/ricaun/ArduinoUniqueID)
         4. [MySensors](https://github.com/mysensors/MySensors/tree/master)
+        5. [RF24](https://github.com/nRF24/RF24)
 4. Install [KiCad]()
     1. [Arduino Libary](https://github.com/Duckle29/kicad-libraries)
     2. [NRF24L01 Library](https://github.com/myelin/myelin-kicad-libraries)
