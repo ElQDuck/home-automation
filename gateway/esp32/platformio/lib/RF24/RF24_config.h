@@ -131,8 +131,10 @@
             #define _SPI HardwareSPI
             #define RF24_SPI_PTR
 
+        #elif defined (ESP32)
+            #include <pgmspace.h>
+            #define PRIPSTR "%s"
         #endif // !defined(__arm__) && !defined (__ARDUINO_X86__)
-
         #ifndef _BV
             #define _BV(x) (1<<(x))
         #endif
