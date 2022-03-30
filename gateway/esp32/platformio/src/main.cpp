@@ -3,6 +3,7 @@
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
+#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 
 // Replace with your network credentials
 const char* ssid = "ssid";
@@ -14,12 +15,9 @@ WiFiServer server(80);
 // Variable to store the HTTP request
 String header;
 
-// Current time
-unsigned long currentTime = millis();
-// Previous time
-unsigned long previousTime = 0; 
-// Define timeout time in milliseconds (example: 2000ms = 2s)
-const long timeoutTime = 2000;
+unsigned long currentTime = millis(); // Current time
+unsigned long previousTime = 0;       // Previous time
+const long timeoutTime = 2000;        // Define timeout time in milliseconds (example: 2000ms = 2s)
 
 // Radio
 RF24 radio(17, 5); // CE, CSN
@@ -28,20 +26,21 @@ const byte address[6] = "00001";
 void setup() {
   Serial.begin(115200);
 
-  // Connect to Wi-Fi network with SSID and password
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  // Wifi Manager
+  WiFi.mode(WIFI_STA);  // explicitly set mode, esp defaults to STA+AP
+  WiFiManager wm;       //WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
+  // wm.resetSettings();   // reset settings - wipe stored credentials for testing
+  bool res = wm.autoConnect("SensorGateway","verrySavePassword"); // password protected Access Point
+  if(!res) {
+    Serial.println("Failed to connect");
+  } 
+  else {
+    Serial.println("connected...yeey :)");
+    Serial.println("WiFi connected.");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+    server.begin();
   }
-  // Print local IP address and start web server
-  Serial.println("");
-  Serial.println("WiFi connected.");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  server.begin();
 
   // Radio
   radio.begin();
