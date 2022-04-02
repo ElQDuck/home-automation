@@ -5,9 +5,8 @@
 #include <RF24.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 
-// Replace with your network credentials
-const char* ssid = "ssid";
-const char* password = "password";
+// Constants
+bool DEBUG = true; // Set true to activate serial messages, false in final code.
 
 // Set web server port number to 80
 WiFiServer server(80);
@@ -23,8 +22,13 @@ const long timeoutTime = 2000;        // Define timeout time in milliseconds (ex
 RF24 radio(17, 5); // CE, CSN
 const byte address[6] = "00001";
 
+// custom functions
+void log(String logMessage);
+
 void setup() {
-  Serial.begin(115200);
+  if (DEBUG) {
+    Serial.begin(115200);
+  }
 
   // Wifi Manager
   WiFi.mode(WIFI_STA);  // explicitly set mode, esp defaults to STA+AP
@@ -32,13 +36,12 @@ void setup() {
   // wm.resetSettings();   // reset settings - wipe stored credentials for testing
   bool res = wm.autoConnect("SensorGateway","verrySavePassword"); // password protected Access Point
   if(!res) {
-    Serial.println("Failed to connect");
+    log("Failed to connect");
   } 
   else {
-    Serial.println("connected...yeey :)");
-    Serial.println("WiFi connected.");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
+    log("WiFi connected.");
+    log("IP address: ");
+    log(WiFi.localIP());
     server.begin();
   }
 
@@ -54,7 +57,7 @@ void loop(){
 
   
   if (radio.available()) {
-    Serial.println("Radio Availible");
+    log("Radio Availible");
     char text[32] = "";
     radio.read(&text, sizeof(text));
     Serial.println(text);
@@ -64,7 +67,7 @@ void loop(){
   if (client) {                             // If a new client connects,
     currentTime = millis();
     previousTime = currentTime;
-    Serial.println("New Client.");          // print a message out in the serial port
+    log("New Client.");          // print a message out in the serial port
     String currentLine = "";                // make a String to hold incoming data from the client
     while (client.connected() && currentTime - previousTime <= timeoutTime) {  // loop while the client's connected
 
@@ -73,7 +76,7 @@ void loop(){
       currentTime = millis();
       if (client.available()) {             // if there's bytes to read from the client,
         char c = client.read();             // read a byte, then
-        Serial.write(c);                    // print it out the serial monitor
+        log(c);                             // print it out the serial monitor
         header += c;
         if (c == '\n') {                    // if the byte is a newline character
           // if the current line is blank, you got two newline characters in a row.
@@ -115,9 +118,16 @@ void loop(){
     header = "";
     // Close the connection
     client.stop();
-    Serial.println("Client disconnected.");
-    Serial.println("");
+    log("Client disconnected.");
+    log("");
   }
 
   
+}
+
+// A logger for debugging
+void log(String logMessage){
+  if(DEBUG){
+    Serial.println(logMessage);
+  }
 }
