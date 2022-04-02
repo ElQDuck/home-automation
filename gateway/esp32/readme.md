@@ -19,3 +19,6 @@ go to RF24_config.h and just after line 133 add the following code:
     #include <pgmspace.h>
     #define PRIPSTR "%s"
 ```
+
+Tutorial for web server:
+https://circuits4you.com/2019/03/20/esp8266-receive-post-get-request-data-from-website/
