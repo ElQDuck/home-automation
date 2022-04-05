@@ -4,6 +4,7 @@
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
+#include <RF24Network.h>
 
 // Function Declarations
 String GetArduinoUniqueID();
@@ -13,8 +14,19 @@ long readVcc();
 const String ARDUINO_ID = GetArduinoUniqueID(); // The unique Arduino ID
 const byte address[6] = "00001";
 
+const uint16_t other_node = 00;      // Address of the other node (gateway) in Octal format
+const uint16_t this_node = 01;       // Address of our node (sensor) in Octal format
+
+struct payload_t {                   // Structure of our payload
+  unsigned long ms;
+  unsigned long counter;
+};
+
+unsigned long packets_sent;          // How many have we sent already
+
 DHT dht; // The DHT Sensor
 RF24 radio(9, 10); // CE, CSN
+RF24Network network(radio);          // Network uses that radio
 
 void setup()
 {
@@ -22,10 +34,18 @@ void setup()
   dht.setup(3); // data pin 3
 
   // RF24
-  radio.begin();
-  radio.openWritingPipe(address);
-  radio.setPALevel(RF24_PA_MIN);
-  radio.stopListening();
+  // radio.begin();
+  // radio.openWritingPipe(address);
+  // radio.setPALevel(RF24_PA_MIN);
+  // radio.stopListening();
+  if (!radio.begin()) {
+    Serial.println(F("Radio hardware not responding!"));
+    while (1) {
+      // hold in infinite loop
+    }
+  }
+  radio.setChannel(90);
+  network.begin(/*node address*/ this_node);
 }
 
 void loop()
@@ -55,9 +75,16 @@ void loop()
   Serial.print("mV\n");
 
   // Send data
-  const char text[] = "Hello World";
-  radio.write(&text, sizeof(text));
-  delay(1000);
+  // const char text[] = "Hello World";
+  // radio.write(&text, sizeof(text));
+  // delay(1000);
+  network.update(); // Check the network regularly
+  // If it's time to send a message, send it!
+    Serial.print(F("Sending... "));
+    payload_t payload = { millis(), packets_sent++ };
+    RF24NetworkHeader header(/*to node*/ other_node);
+    bool ok = network.write(header, &payload, sizeof(payload));
+    Serial.println(ok ? F("ok.") : F("failed."));
 }
 
 // Function to get the ArduinoUniqueID
