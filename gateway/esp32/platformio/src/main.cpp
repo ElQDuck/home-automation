@@ -67,7 +67,7 @@ const uint16_t this_node = 00;  // Address of our node in Octal format (04, 031,
 const uint16_t other_node = 01; // Address of the other node in Octal format
 
 struct payload_t {              // Structure of our payload
-  unsigned long ms;
+  String ms;
   unsigned long counter;
 };
 
@@ -111,6 +111,8 @@ void setup() {
   network.begin(/*node address*/ this_node);
 }
 
+
+
 void loop(){
   // Radio
   // if (radio.available()) {
@@ -122,14 +124,22 @@ void loop(){
   network.update();                  // Check the network regularly
  
   while (network.available()) {      // Is there anything ready for us?
- 
+    
+    Serial.println(F("Reading header"));
     RF24NetworkHeader header;        // If so, grab it and print it out
-    payload_t payload;
-    network.read(header, &payload, sizeof(payload));
-    Serial.print(F("Received packet: counter="));
-    Serial.print(payload.counter);
-    Serial.print(F(", origin timestamp="));
-    Serial.println(payload.ms);
+    Serial.print(F("Getting payload size: "));
+    uint16_t payloadSize = network.peek(header); // Use peek() to get the size of the payload
+    char payload[payloadSize];
+    Serial.print(String(payloadSize));
+    Serial.print("\n");
+    Serial.println(F("Read network"));
+    Serial.print("\n");
+    network.read(header, &payload, payloadSize);
+    Serial.print("Received packet, size ");         // Print info about received data
+    Serial.print(sizeof(payload));
+    Serial.print("\n");
+    Serial.println(F("Message: "));
+    Serial.println(payload);    
   }
 
   // WebServer

@@ -5,6 +5,7 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 #include <RF24Network.h>
+#include <string.h>
 
 // Function Declarations
 String GetArduinoUniqueID();
@@ -18,7 +19,7 @@ const uint16_t other_node = 00;      // Address of the other node (gateway) in O
 const uint16_t this_node = 01;       // Address of our node (sensor) in Octal format
 
 struct payload_t {                   // Structure of our payload
-  unsigned long ms;
+  String ms;
   unsigned long counter;
 };
 
@@ -54,6 +55,7 @@ void loop()
 
   float humidity = dht.getHumidity();
   float temperature = dht.getTemperature();
+  String json = "";
 
   // Print value if both values are real numbers (prevent NaN print)
   if (!isnan(humidity) && !isnan(temperature))
@@ -64,7 +66,7 @@ void loop()
     // 	  "Humidity": 48.0,
     // 	  "Temperature": 21.1
     // }
-    String json = "{\"DeviceID\":\"" + String(ARDUINO_ID) + "\",\"Humidity\":" + String(dht.getHumidity()) + ",\"Temperature\":" + String(dht.getTemperature()) + "}";
+    json = "{\"DeviceID\":\"" + String(ARDUINO_ID) + "\",\"Humidity\":" + String(dht.getHumidity()) + ",\"Temperature\":" + String(dht.getTemperature()) + "}";
     Serial.print(json);
     Serial.print("\n");
   }
@@ -80,10 +82,17 @@ void loop()
   // delay(1000);
   network.update(); // Check the network regularly
   // If it's time to send a message, send it!
+    int stringLength = json.length();
+    char msg[stringLength + 1];
+    strcpy(msg, json.c_str());
+
     Serial.print(F("Sending... "));
-    payload_t payload = { millis(), packets_sent++ };
+    Serial.print(json);
+    Serial.print("With size:");
+    uint16_t msgLength = sizeof(msg);
+    Serial.print(msgLength);
     RF24NetworkHeader header(/*to node*/ other_node);
-    bool ok = network.write(header, &payload, sizeof(payload));
+    bool ok = network.write(header, &msg, msgLength);
     Serial.println(ok ? F("ok.") : F("failed."));
 }
 
