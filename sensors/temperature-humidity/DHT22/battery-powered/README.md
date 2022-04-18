@@ -18,6 +18,7 @@ Used Hardware
         5. [RF24](https://github.com/nRF24/RF24)
         6. [RF24Network](https://github.com/nRF24/RF24Network)
         7. [pubsubclient](https://github.com/knolleary/pubsubclient)
+        8. [Low-Power](https://github.com/rocketscream/Low-Power)
 4. Install [KiCad]()
     1. [Arduino Libary](https://github.com/Duckle29/kicad-libraries)
     2. [NRF24L01 Library](https://github.com/myelin/myelin-kicad-libraries)

@@ -6,6 +6,7 @@
 #include <RF24.h>
 #include <RF24Network.h>
 #include <string.h>
+#include "LowPower.h"
 
 // Function Declarations
 String GetArduinoUniqueID();
@@ -24,6 +25,7 @@ struct payload_t {                   // Structure of our payload
 };
 
 unsigned long packets_sent;          // How many have we sent already
+int sleepCounter = 0;                // Counts the number of consecutive sleeps
 
 DHT dht;                             // The DHT Sensor
 RF24 radio(9, 10);                   // CE, CSN
@@ -46,45 +48,61 @@ void setup()
 
 void loop()
 {
-  delay(dht.getMinimumSamplingPeriod());
+  sleepCounter ++;  // The counter for the sleep cycles
 
-  float humidity = dht.getHumidity();
-  float temperature = dht.getTemperature();
-  String json = "";
-
-  // Print value if both values are real numbers (prevent NaN print)
-  if (!isnan(humidity) && !isnan(temperature))
+  // The deep sleep mode can only sleep for max. 8 seconds.
+  // For a sleep period of >8s we have to go in sleep mode periodicaly.
+  // Example: Sleep for 16s: sleepCounter >= 2 -> 2*8s=16s
+  // If in debug mode sleep for 16 seconds, if not sleep for 4 minutes
+  if (sleepCounter >= (DEBUG ? 2 : 30))
   {
-    // JSON Example:
-    // {
-    // 	  "DeviceID": "88255223255823855255255255",
-    //    "BatteryVoltage" 3.15, (V)
-    //    "SensorType": "DHT22",
-    // 	  "Humidity": 48.0, (%)
-    // 	  "Temperature": 21.1 (°C)
-    // }
-    json = "{\"DeviceID\":\"" + String(ARDUINO_ID) + "\", \
-            \"BatteryVoltage\":" + readVcc() / 1000. + ", \
-            \"SensorType\":\"DHT22\", \
-            \"Humidity\":" + String(dht.getHumidity()) + ", \
-            \"Temperature\":" + String(dht.getTemperature()) + "}";
-    log(json);
+    delay(dht.getMinimumSamplingPeriod());
+
+    float humidity = dht.getHumidity();
+    float temperature = dht.getTemperature();
+    String json = "";
+
+    // Print value if both values are real numbers (prevent NaN print)
+    if (!isnan(humidity) && !isnan(temperature))
+    {
+      // JSON Example:
+      // {
+      // 	  "DeviceID": "88255223255823855255255255",
+      //    "BatteryVoltage" 3.15, (V)
+      //    "SensorType": "DHT22",
+      // 	  "Humidity": 48.0, (%)
+      // 	  "Temperature": 21.1 (°C)
+      // }
+      json = "{\"DeviceID\":\"" + String(ARDUINO_ID) + "\", \
+              \"BatteryVoltage\":" + readVcc() / 1000. + ", \
+              \"SensorType\":\"DHT22\", \
+              \"Humidity\":" + String(dht.getHumidity()) + ", \
+              \"Temperature\":" + String(dht.getTemperature()) + "}";
+      log(json);
+    }
+
+    network.update(); // Check the network regularly
+    // If it's time to send a message, send it!
+      int stringLength = json.length();
+      char msg[stringLength + 1];
+      strcpy(msg, json.c_str());
+
+      log("Sending... ");
+      log(json);
+      log("With size:");
+      uint16_t msgLength = sizeof(msg);
+      log(String(msgLength));
+      RF24NetworkHeader header(/*to node*/ other_node);
+      bool ok = network.write(header, &msg, msgLength);
+      log(ok ? "ok." : "failed.");
+
+    sleepCounter = 0; // Reset the sleep counter
   }
-
-  network.update(); // Check the network regularly
-  // If it's time to send a message, send it!
-    int stringLength = json.length();
-    char msg[stringLength + 1];
-    strcpy(msg, json.c_str());
-
-    log("Sending... ");
-    log(json);
-    log("With size:");
-    uint16_t msgLength = sizeof(msg);
-    log(String(msgLength));
-    RF24NetworkHeader header(/*to node*/ other_node);
-    bool ok = network.write(header, &msg, msgLength);
-    log(ok ? "ok." : "failed.");
+  // Sleep for 8 seconds
+  log("Going to sleep.");
+  delay(100);
+  LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); // For more information on the different types of sleep mode refer to: https://elektro.turanis.de/html/prj270/index.html
+  log("im awake");
 }
 
 // Function to get the ArduinoUniqueID
