@@ -10,11 +10,11 @@
 // Function Declarations
 String GetArduinoUniqueID();
 long readVcc();
+void log(String logMessage);
 
 // Constants
+bool DEBUG = true; // Set true to activate serial messages, false in final code.
 const String ARDUINO_ID = GetArduinoUniqueID(); // The unique Arduino ID
-const byte address[6] = "00001";
-
 const uint16_t other_node = 00;      // Address of the other node (gateway) in Octal format
 const uint16_t this_node = 01;       // Address of our node (sensor) in Octal format
 
@@ -25,8 +25,8 @@ struct payload_t {                   // Structure of our payload
 
 unsigned long packets_sent;          // How many have we sent already
 
-DHT dht; // The DHT Sensor
-RF24 radio(9, 10); // CE, CSN
+DHT dht;                             // The DHT Sensor
+RF24 radio(9, 10);                   // CE, CSN
 RF24Network network(radio);          // Network uses that radio
 
 void setup()
@@ -34,19 +34,14 @@ void setup()
   Serial.begin(9600);
   dht.setup(3); // data pin 3
 
-  // RF24
-  // radio.begin();
-  // radio.openWritingPipe(address);
-  // radio.setPALevel(RF24_PA_MIN);
-  // radio.stopListening();
   if (!radio.begin()) {
-    Serial.println(F("Radio hardware not responding!"));
+    log("Radio hardware not responding!");
     while (1) {
       // hold in infinite loop
     }
   }
   radio.setChannel(90);
-  network.begin(/*node address*/ this_node);
+  network.begin(this_node);
 }
 
 void loop()
@@ -62,38 +57,34 @@ void loop()
   {
     // JSON Example:
     // {
-    // 	  "DeviceID": "88255223255223255255255255",
-    // 	  "Humidity": 48.0,
-    // 	  "Temperature": 21.1
+    // 	  "DeviceID": "88255223255823855255255255",
+    //    "BatteryVoltage" 3.15, (V)
+    //    "SensorType": "DHT22",
+    // 	  "Humidity": 48.0, (%)
+    // 	  "Temperature": 21.1 (°C)
     // }
-    json = "{\"DeviceID\":\"" + String(ARDUINO_ID) + "\",\"Humidity\":" + String(dht.getHumidity()) + ",\"Temperature\":" + String(dht.getTemperature()) + "}";
-    Serial.print(json);
-    Serial.print("\n");
+    json = "{\"DeviceID\":\"" + String(ARDUINO_ID) + "\", \
+            \"BatteryVoltage\":" + readVcc() / 1000. + ", \
+            \"SensorType\":\"DHT22\", \
+            \"Humidity\":" + String(dht.getHumidity()) + ", \
+            \"Temperature\":" + String(dht.getTemperature()) + "}";
+    log(json);
   }
 
-  // Measure battery voltage with readVcc()
-  Serial.print("Battery voltage: ");
-  Serial.print(readVcc());
-  Serial.print("mV\n");
-
-  // Send data
-  // const char text[] = "Hello World";
-  // radio.write(&text, sizeof(text));
-  // delay(1000);
   network.update(); // Check the network regularly
   // If it's time to send a message, send it!
     int stringLength = json.length();
     char msg[stringLength + 1];
     strcpy(msg, json.c_str());
 
-    Serial.print(F("Sending... "));
-    Serial.print(json);
-    Serial.print("With size:");
+    log("Sending... ");
+    log(json);
+    log("With size:");
     uint16_t msgLength = sizeof(msg);
-    Serial.print(msgLength);
+    log(String(msgLength));
     RF24NetworkHeader header(/*to node*/ other_node);
     bool ok = network.write(header, &msg, msgLength);
-    Serial.println(ok ? F("ok.") : F("failed."));
+    log(ok ? "ok." : "failed.");
 }
 
 // Function to get the ArduinoUniqueID
@@ -110,6 +101,7 @@ String GetArduinoUniqueID(){
 
 // TODO: make a reference measurement
 // Used from https://forum.arduino.cc/t/how-to-know-vcc-voltage-in-arduino/344001
+// Reads the Voltage in mV
 long readVcc() {
   long result;
   // Read 1.1V reference against AVcc
@@ -121,4 +113,11 @@ long readVcc() {
   result |= ADCH<<8;
   result = 1126400L / result; // Back-calculate AVcc in mV
   return result;
+}
+
+// A logger for debugging
+void log(String logMessage){
+  if(DEBUG){
+    Serial.println(logMessage);
+  }
 }
