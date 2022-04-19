@@ -5,14 +5,15 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 #include <RF24Network.h>
-#include <RF24Mesh.h>
-#include <RF24Ethernet.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
-#include <MQTT.h>
+#include <PubSubClient.h>
 
 
 // Constants
 bool DEBUG = true; // Set true to activate serial messages, false in final code.
+
+// TODO: Set mqtt broker address in web interface
+const char* mqtt_server = "192.168.178.65";
 
 // Set web server port number to 80
 WebServer server(80);
@@ -70,6 +71,10 @@ RF24Network network(radio);     // Network uses that radio
 const uint16_t this_node = 00;  // Address of our node in Octal format (04, 031, etc)
 const uint16_t other_node = 01; // Address of the other node in Octal format
 
+// Wifi and MQTT client
+WiFiClient espClient;
+PubSubClient client(espClient);
+
 struct payload_t {              // Structure of our payload
   String ms;
   unsigned long counter;
@@ -77,6 +82,7 @@ struct payload_t {              // Structure of our payload
 
 // custom functions
 void log(String logMessage);
+void MqttReconnect();
 
 void setup() {
   if (DEBUG) {
@@ -99,6 +105,9 @@ void setup() {
     server.on("/action_page", handleForm); //form action is handled here
     server.begin();                  //Start server
   }
+
+  // MQTT
+  client.setServer(mqtt_server, 1883);
 
   // Radio
   // radio.begin();
@@ -146,6 +155,15 @@ void loop(){
     Serial.println(payload);    
   }
 
+  // MQTT
+  if (!client.connected()) {
+    MqttReconnect();
+  }
+
+  client.loop(); //TODO: Check if this is neccessary
+  client.publish("homie/device123/mythermostat/temperature", "21", true); // topic, value, retained
+  delay(10000); // TODO: Delete after testing
+
   // WebServer
   server.handleClient();          //Handle client requests
 }
@@ -154,5 +172,25 @@ void loop(){
 void log(String logMessage){
   if(DEBUG){
     Serial.println(logMessage);
+  }
+}
+
+// Reconnect to MQTT
+void MqttReconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    if (client.connect("ESP8266Client")) {
+      Serial.println("connected");
+      // Subscribe
+      client.subscribe("esp32/output");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
   }
 }
