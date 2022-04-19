@@ -56,6 +56,7 @@ void loop()
   // If in debug mode sleep for 16 seconds, if not sleep for 4 minutes
   if (sleepCounter >= (DEBUG ? 2 : 30))
   {
+    //TODO: use sleep mode for nrf24 https://nrf24.github.io/RF24/examples_2old_backups_2pingpair_sleepy_2pingpair_sleepy_8ino-example.html
     delay(dht.getMinimumSamplingPeriod());
 
     float humidity = dht.getHumidity();

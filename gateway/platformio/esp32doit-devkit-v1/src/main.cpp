@@ -5,7 +5,11 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 #include <RF24Network.h>
+#include <RF24Mesh.h>
+#include <RF24Ethernet.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
+#include <MQTT.h>
+
 
 // Constants
 bool DEBUG = true; // Set true to activate serial messages, false in final code.
