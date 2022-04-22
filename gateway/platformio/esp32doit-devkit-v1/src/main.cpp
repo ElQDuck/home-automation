@@ -15,6 +15,9 @@ bool DEBUG = true; // Set true to activate serial messages, false in final code.
 // TODO: Set mqtt broker address in web interface
 const char* mqtt_server = "192.168.178.65";
 
+// Globals
+bool mqttConnected = false;
+
 // Set web server port number to 80
 WebServer server(80);
 
@@ -64,6 +67,17 @@ void handleForm() {
  server.send(200, "text/html", s); //Send web page
 }
 
+void handleStatus(){
+  if (mqttConnected)
+  {
+    server.send(200, "text/html", "MQTT connected"); //Send web page
+  }
+  else
+  {
+    server.send(200, "text/html", "MQTT disconnected"); //Send web page
+  }
+}
+
 
 // Radio
 RF24 radio(17, 5); // CE, CSN
@@ -103,6 +117,7 @@ void setup() {
     log(WiFi.localIP());
     server.on("/", handleRoot);      //Which routine to handle at root 
     server.on("/action_page", handleForm); //form action is handled here
+    server.on("/status", handleStatus); // Show mqtt connection status
     server.begin();                  //Start server
   }
 
@@ -183,12 +198,14 @@ void MqttReconnect() {
     // Attempt to connect
     if (client.connect("ESP8266Client")) {
       Serial.println("connected");
+      mqttConnected = true;
       // Subscribe
       client.subscribe("esp32/output");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
+      mqttConnected = false;
       // Wait 5 seconds before retrying
       delay(5000);
     }
