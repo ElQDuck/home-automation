@@ -10,10 +10,10 @@
 #include "LowPower.h"
 
 // Function Declarations
-struct BME_VALUES {float humidity; float pressure; float altitude; float temperature;};
+struct BME_VALUES {char humidity[6]; char pressure[8]; char altitude[6]; char temperature[6];};
 
 String GetArduinoUniqueID();
-long ReadVcc();
+double ReadVccInV();
 void Log(String logMessage);
 BME_VALUES ReadBmeValues();
 
@@ -71,43 +71,37 @@ void loop()
 
     // JSON Example:
     // {
-    // 	  "DeviceID": "88255223255823855255255255",
-    //    "BatteryVoltage" 3.15, (V)
-    //    "SensorType": "BME280",
-    // 	  "Temperature": 21.1 (°C)
-    // 	  "Humidity": 48.0, (%)
-    //    "Pressure": 996.63 (hPa)
+    //   "DeviceID": "88255223255223255255255255",
+    //   "BatteryVoltageValue": 3.22,
+    //   "BatteryVoltageUnit": "V",
+    //   "SensorType": "BME280",
+    //   "TemperatureValue": 18.39,
+    //   "TemperatureUnit": "°C",
+    //   "HumidityValue": 52.27,
+    //   "HumidityUnit": "%",
+    //   "PressureValue": 1007.08,
+    //   "PressureUnit": "hPa"
     // }
-    
-
-    // TODO: replace json with char[]
-
-    String json = "askldjalskdjaskldjalskdjaskldjalskdjaskldjalskdjask";
-    //String json = "{\"DeviceID\":\"" + ARDUINO_ID + "\", \
-    //         \"BatteryVoltageValue\":" + ReadVcc() / 1000. + ", \
-    //         \"BatteryVoltageUnit\": \"V\", \
-    //         \"SensorType\":\"BME280\", \
-    //         \"TemperatureValue\":" + sensorValues.temperature + ", \
-    //         \"TemperatureUnit\": \"°C\", \
-    //         \"HumidityValue\":" + sensorValues.humidity + ", \
-    //         \"HumidityUnit\": \"%\", \
-    //         \"PressureValue\":" + sensorValues.pressure + ", \
-    //         \"PressureUnit\": \"hPa\"}";
-    Log(json);
+    char json[251];
+    uint16_t jsonLength = sizeof(json);
+    snprintf_P(json, jsonLength, PSTR("{\"DeviceID\":\"%s\",\"BatteryVoltageValue\":%s,\"BatteryVoltageUnit\":\"V\",\"SensorType\":\"BME280\",\"TemperatureValue\":%s,\"TemperatureUnit\":\"°C\",\"HumidityValue\":%s,\"HumidityUnit\":\"%%\",\"PressureValue\":%s,\"PressureUnit\":\"hPa\"}"), ARDUINO_ID.c_str(), String(ReadVccInV()).c_str(), sensorValues.temperature, sensorValues.humidity, sensorValues.pressure);
 
     radio.powerUp();  // Wake up the RF24 from sleep mode
-    network.update(); // Check the network regularly
+    network.update(); // Check the network regularly    
 
-    // Convert the json string into a char array because we cant use the String for sending
-    int stringLength = json.length();
-    char msg[stringLength + 1];
-    strcpy(msg, json.c_str());
-    uint16_t msgLength = sizeof(msg);
-
-    Log("Sending... " + json);
-    Log("With size: " + String(msgLength));
+    // Print the json string for debuging
+    if (DEBUG)
+    {
+      for (size_t i = 0; i < jsonLength; i++)
+      {
+        Serial.print(json[i]);
+      }
+    }
+    
+    Log("\nSending... ");
+    Log("With size: " + String(jsonLength));
     RF24NetworkHeader header(other_node); // To Gateway
-    bool ok = network.write(header, &msg, msgLength);
+    bool ok = network.write(header, &json, jsonLength);
     Log(ok ? "ok." : "failed.");
 
     radio.powerDown();  // Put the RF24 into sleep mode: https://nrf24.github.io/RF24/examples_2old_backups_2pingpair_sleepy_2pingpair_sleepy_8ino-example.html
@@ -135,8 +129,9 @@ String GetArduinoUniqueID(){
 // Reads the Voltage in mV
 // TODO: make a reference measurement
 // Used from https://forum.arduino.cc/t/how-to-know-vcc-voltage-in-arduino/344001
-long ReadVcc() {
+double ReadVccInV() {
   long result;
+  double resultInVolt;
   // Read 1.1V reference against AVcc
   ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
   delay(2); // Wait for Vref to settle
@@ -145,7 +140,8 @@ long ReadVcc() {
   result = ADCL;
   result |= ADCH<<8;
   result = 1126400L / result; // Back-calculate AVcc in mV
-  return result;
+  resultInVolt = result / 1000.;
+  return resultInVolt;
 }
 
 // A logger for debugging
@@ -157,7 +153,6 @@ void Log(String logMessage){
 
 // Read values from BME280 Sensor
 // Code from: https://github.com/sparkfun/SparkFun_BME280_Arduino_Library/blob/master/examples/Example6_LowPower/Example6_LowPower.ino
-// TODO: Return Values (replace void)
 BME_VALUES ReadBmeValues() {
   BME_VALUES returnValue;
 
@@ -166,15 +161,10 @@ BME_VALUES ReadBmeValues() {
   while(bme.isMeasuring() == true);   // Hang out while sensor completes the reading
 
   // Sensor is now back asleep but the data can be read from its registers
-  returnValue.humidity = bme.readFloatHumidity();       // in %
-  returnValue.pressure = bme.readFloatPressure() / 100; // in hPa
-  returnValue.altitude = bme.readFloatAltitudeMeters(); // in m
-  returnValue.temperature = bme.readTempC();            // in °C
-
-  Log("Humidity: " + String(returnValue.humidity) + "%");
-  Log("Pressure: " + String(returnValue.pressure) + "hPa");
-  Log("Altitude: " + String(returnValue.altitude) + "m");
-  Log("Temperature: " + String(returnValue.temperature) + "°C");
+  snprintf_P(returnValue.humidity, 6, PSTR("%s"), String(bme.readFloatHumidity(), 2).c_str());       // in %
+  snprintf_P(returnValue.pressure, 8, PSTR("%s"), String(bme.readFloatPressure()/100, 2).c_str());   // in hPa
+  snprintf_P(returnValue.altitude, 6, PSTR("%s"), String(bme.readFloatAltitudeMeters(), 2).c_str()); // in m
+  snprintf_P(returnValue.temperature, 6, PSTR("%s"), String(bme.readTempC(), 2).c_str());            // in °C
 
   return returnValue;
 }

@@ -114,7 +114,7 @@ void setup() {
   else {
     log("WiFi connected.");
     log("IP address: ");
-    log(WiFi.localIP());
+    Serial.println(WiFi.localIP());
     server.on("/", handleRoot);      //Which routine to handle at root 
     server.on("/action_page", handleForm); //form action is handled here
     server.on("/status", handleStatus); // Show mqtt connection status
@@ -177,7 +177,7 @@ void loop(){
 
   client.loop(); //TODO: Check if this is neccessary
   client.publish("homie/device123/mythermostat/temperature", "21", true); // topic, value, retained
-  delay(10000); // TODO: Delete after testing
+  //delay(10000); // TODO: Delete after testing
 
   // WebServer
   server.handleClient();          //Handle client requests

@@ -56,7 +56,7 @@
          * the actual transmitted payload to 24 bytes (which is also the default behavior on ATTiny devices).
          */
         #ifndef MAX_PAYLOAD_SIZE
-            #define MAX_PAYLOAD_SIZE  144
+            #define MAX_PAYLOAD_SIZE  256
         #endif // MAX_PAYLOAD_SIZE
 
         /**
