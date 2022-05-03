@@ -19,7 +19,7 @@ BME_VALUES ReadBmeValues();
 
 
 // Constants
-bool DEBUG = true; // Set true to activate serial messages, false in final code.
+const bool DEBUG = true; // Set true to activate serial messages, false in final code.
 const String ARDUINO_ID = GetArduinoUniqueID(); // The unique Arduino ID
 const uint16_t other_node = 00;      // Address of the other node (gateway) in Octal format TODO: Rename variable name
 const uint16_t this_node = 01;       // Address of our node (sensor) in Octal format
