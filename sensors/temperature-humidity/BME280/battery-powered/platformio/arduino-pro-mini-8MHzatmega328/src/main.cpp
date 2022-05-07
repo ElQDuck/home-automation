@@ -9,44 +9,40 @@
 #include <string.h>
 #include "LowPower.h"
 
-// Function Declarations
+// Structs
 struct BME_VALUES {char humidity[6]; char pressure[8]; char altitude[6]; char temperature[6];};
 
+// Function Declarations
 String GetArduinoUniqueID();
 double ReadVccInV();
 void Log(String logMessage);
 BME_VALUES ReadBmeValues();
 
-
 // Constants
-const bool DEBUG = true; // Set true to activate serial messages, false in final code.
+const bool DEBUG = true;                        // Set true to activate serial messages, false in final code.
 const String ARDUINO_ID = GetArduinoUniqueID(); // The unique Arduino ID
-const uint16_t other_node = 00;      // Address of the other node (gateway) in Octal format TODO: Rename variable name
-const uint16_t this_node = 01;       // Address of our node (sensor) in Octal format
-
-struct payload_t {                   // Structure of our payload
-  String ms;
-  unsigned long counter;
-};
-
-unsigned long packets_sent;          // How many have we sent already
-int sleepCounter = 0;                // Counts the number of consecutive sleeps
+const uint16_t receiverAddress = 00;            // Address of the other node (gateway) in Octal format TODO: Rename variable name
+const uint16_t senderAddress = 01;              // Address of our node (sensor) in Octal format
 
 BME280 bme;                          // The BME280 Sensor
 RF24 radio(9, 10);                   // CE, CSN
 RF24Network network(radio);          // Network uses that radio
 
+// Global variables
+int sleepCounter = 0;                // Counts the number of consecutive sleeps
+
 void setup()
 {
   Serial.begin(115200);
 
-  // BME280
+  // BME280 configuration
   Wire.begin();
-  Wire.setClock(400000); //Increase to fast I2C speed!
+  Wire.setClock(400000);    //Increase to fast I2C speed!
   bme.setI2CAddress(0x76);
   bme.beginI2C();
-  bme.setMode(MODE_SLEEP); //Sleep for now
+  bme.setMode(MODE_SLEEP);  //Sleep for now
 
+  // NRF24L01 configuration
   if (!radio.begin()) {
     Log("Radio hardware not responding!");
     while (1) {
@@ -54,7 +50,7 @@ void setup()
     }
   }
   radio.setChannel(90);
-  network.begin(this_node);
+  network.begin(senderAddress);
 }
 
 void loop()
@@ -64,7 +60,7 @@ void loop()
   // The deep sleep mode can only sleep for max. 8 seconds.
   // For a sleep period of >8s we have to go in sleep mode periodicaly.
   // Example: Sleep for 16s: sleepCounter >= 2 -> 2*8s=16s
-  // If in debug mode sleep for 16 seconds, if not sleep for 4 minutes
+  // If in debug mode sleep for 2 = 16 sec, if not sleep for 30 = 240 sec = 4 min
   if (sleepCounter >= (DEBUG ? 2 : 30))
   {
     BME_VALUES sensorValues = ReadBmeValues();
@@ -87,7 +83,7 @@ void loop()
     snprintf_P(json, jsonLength, PSTR("{\"DeviceID\":\"%s\",\"BatteryVoltageValue\":%s,\"BatteryVoltageUnit\":\"V\",\"SensorType\":\"BME280\",\"TemperatureValue\":%s,\"TemperatureUnit\":\"°C\",\"HumidityValue\":%s,\"HumidityUnit\":\"%%\",\"PressureValue\":%s,\"PressureUnit\":\"hPa\"}"), ARDUINO_ID.c_str(), String(ReadVccInV()).c_str(), sensorValues.temperature, sensorValues.humidity, sensorValues.pressure);
 
     radio.powerUp();  // Wake up the RF24 from sleep mode
-    network.update(); // Check the network regularly    
+    network.update(); // Check if the network is up and ready    
 
     // Print the json string for debuging
     if (DEBUG)
@@ -98,15 +94,14 @@ void loop()
       }
     }
     
-    Log("\nSending... ");
-    Log("With size: " + String(jsonLength));
-    RF24NetworkHeader header(other_node); // To Gateway
+    Log("\nSending data with size " + String(jsonLength));
+    RF24NetworkHeader header(receiverAddress);  // To Gateway
     bool ok = network.write(header, &json, jsonLength);
     Log(ok ? "ok." : "failed.");
 
     radio.powerDown();  // Put the RF24 into sleep mode: https://nrf24.github.io/RF24/examples_2old_backups_2pingpair_sleepy_2pingpair_sleepy_8ino-example.html
     sleepCounter = 0;   // Reset the sleep counter to put the Arduino into sleep mode
-    delay(100);         // delay before go to sleep to finish background work
+    delay(100);         // delay before go to sleep to finish background work TODO Check if necessary
   }
 
   // Sleep
