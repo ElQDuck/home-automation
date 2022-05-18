@@ -7,6 +7,7 @@
 #include <RF24Network.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 
 // Constants
@@ -181,7 +182,24 @@ void loop(){
 
   // WebServer
   server.handleClient();          //Handle client requests
+
+  // JSON tryout
+  StaticJsonDocument<200> doc;
+  char json[] = "{\"sensor\":\"gps\",\"time\":1351824120,\"data\":[48.756080,2.302038]}";
+  DeserializationError error = deserializeJson(doc, json);
+  
+  const char* sensor = doc["sensor"];
+  long time = doc["time"];
+  double latitude = doc["data"][0];
+  double longitude = doc["data"][1];
+
+  // Print values.
+  Serial.println(sensor);
+  Serial.println(time);
+  Serial.println(latitude, 6);
+  Serial.println(longitude, 6);
 }
+
 
 // A logger for debugging
 void log(String logMessage){
@@ -193,7 +211,7 @@ void log(String logMessage){
 // Reconnect to MQTT
 void MqttReconnect() {
   // Loop until we're reconnected
-  while (!client.connected()) {
+  if (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
     if (client.connect("ESP8266Client")) {
@@ -207,7 +225,7 @@ void MqttReconnect() {
       Serial.println(" try again in 5 seconds");
       mqttConnected = false;
       // Wait 5 seconds before retrying
-      delay(5000);
+      //delay(5000);
     }
   }
 }
