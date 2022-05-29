@@ -273,11 +273,30 @@ void publishBME280(StaticJsonDocument<256> bmeValuesJson){
   publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/$name", strdup("BME280 Sensor"));  // homie/88255223255223255255255255/bme280/$name → BME280 Sensor
   publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/$properties", strdup("battery-voltage,temperature,humidity,pressure"));  // homie/88255223255223255255255255/bme280/$properties → battery-voltage,temperature,humidity,pressure
 
+  // battery-voltage
   publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/battery-voltage", bmeValuesJson["BatteryVoltageValue"].as<String>());
   publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/battery-voltage/$name", strdup("Battery Voltage"));
   publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/battery-voltage/$unit", bmeValuesJson["BatteryVoltageUnit"].as<String>());
   publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/battery-voltage/$datatype", strdup("float"));
   publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/battery-voltage/$settable", strdup("false"));
+  // temperature
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/temperature", bmeValuesJson["TemperatureValue"].as<String>());
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/temperature/$name", strdup("Temperature"));
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/temperature/$unit", bmeValuesJson["TemperatureUnit"].as<String>());
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/temperature/$datatype", strdup("float"));
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/temperature/$settable", strdup("false"));
+  // humidity
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/humidity", bmeValuesJson["HumidityValue"].as<String>());
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/humidity/$name", strdup("Humidity"));
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/humidity/$unit", bmeValuesJson["HumidityUnit"].as<String>());
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/humidity/$datatype", strdup("float"));
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/humidity/$settable", strdup("false"));
+  // pressure
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/pressure", bmeValuesJson["PressureValue"].as<String>());
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/pressure/$name", strdup("Pressure"));
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/pressure/$unit", bmeValuesJson["PressureUnit"].as<String>());
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/pressure/$datatype", strdup("float"));
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/pressure/$settable", strdup("false"));
 }
 
 void publishString(String topic, String value){
