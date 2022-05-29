@@ -98,6 +98,8 @@ struct payload_t {              // Structure of our payload
 // custom functions
 void log(String logMessage);
 void MqttReconnect();
+void publishBME280(StaticJsonDocument<256> bmeValuesJson);
+void publishString(String topic, String value);
 
 void setup() {
   if (DEBUG) {
@@ -168,7 +170,21 @@ void loop(){
     Serial.print(sizeof(payload));
     Serial.print("\n");
     Serial.println(F("Message: "));
-    Serial.println(payload);    
+    Serial.println(payload);
+
+    // Convert payload to json for further work
+    StaticJsonDocument<256> jsonPayload;
+    DeserializationError error = deserializeJson(jsonPayload, payload);
+    
+    // Test if parsing succeeds.
+    if (error) {
+      Serial.print(F("deserializeJson() failed: "));
+      Serial.println(error.f_str());
+      return;
+    }
+
+    // TODO: switch case for device ids
+    publishBME280(jsonPayload);
   }
 
   // MQTT
@@ -177,7 +193,7 @@ void loop(){
   }
 
   client.loop(); //TODO: Check if this is neccessary
-  client.publish("homie/device123/mythermostat/temperature", "21", true); // topic, value, retained
+  //client.publish("homie/device123/mythermostat/temperature", "21", true); // topic, value, retained
   //delay(10000); // TODO: Delete after testing
 
   // WebServer
@@ -194,10 +210,10 @@ void loop(){
   double longitude = doc["data"][1];
 
   // Print values.
-  Serial.println(sensor);
-  Serial.println(time);
-  Serial.println(latitude, 6);
-  Serial.println(longitude, 6);
+  // Serial.println(sensor);
+  // Serial.println(time);
+  // Serial.println(latitude, 6);
+  // Serial.println(longitude, 6);
 }
 
 
@@ -228,4 +244,50 @@ void MqttReconnect() {
       //delay(5000);
     }
   }
+}
+
+void publishBME280(StaticJsonDocument<256> bmeValuesJson){
+  /*
+  homie / device123 / $homie → 3.0
+  homie / device123 / $name → My device
+  homie / device123 / $state → ready
+  homie / device123 / $nodes → mythermostat
+
+  homie / device123 / mythermostat / $name → My thermostat
+  homie / device123 / mythermostat / $properties → temperature
+
+  homie / device123 / mythermostat / temperature → 22 
+  homie / device123 / mythermostat / temperature / $name → Temperature
+  homie / device123 / mythermostat / temperature / $unit → °C
+  homie / device123 / mythermostat / temperature / $datatype → integer
+  homie / device123 / mythermostat / temperature / $settable → true
+  */
+  // https://homieiot.github.io/specification/
+  // The following device attributes are mandatory and MUST be send, even if it is just an empty string.
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/$homie", strdup("4.0.0"));                // homie/88255223255223255255255255/$homie → 4.0.0
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/$name", strdup("Temp. and Hum. Sensor")); // homie/88255223255223255255255255/$name → Temp. and Hum. Sensor
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/$state", strdup("ready"));                // homie/88255223255223255255255255/$state → ready
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/$nodes", strdup("bme280"));               // homie/88255223255223255255255255/$nodes → bme280
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/$extensions", strdup(""));                // homie/88255223255223255255255255/$extensions → 
+
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/$name", strdup("BME280 Sensor"));  // homie/88255223255223255255255255/bme280/$name → BME280 Sensor
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/$properties", strdup("battery-voltage,temperature,humidity,pressure"));  // homie/88255223255223255255255255/bme280/$properties → battery-voltage,temperature,humidity,pressure
+
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/battery-voltage", bmeValuesJson["BatteryVoltageValue"].as<String>());
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/battery-voltage/$name", strdup("Battery Voltage"));
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/battery-voltage/$unit", bmeValuesJson["BatteryVoltageUnit"].as<String>());
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/battery-voltage/$datatype", strdup("float"));
+  publishString("homie/" + bmeValuesJson["DeviceID"].as<String>() + "/bme280/battery-voltage/$settable", strdup("false"));
+}
+
+void publishString(String topic, String value){
+  int stringLength = topic.length();
+  char ctopic[stringLength + 1];
+  strcpy(ctopic, topic.c_str());
+
+  stringLength = value.length();
+  char cvalue[stringLength + 1];
+  strcpy(cvalue, value.c_str());
+
+  client.publish(ctopic, cvalue, true); // topic, value, retained
 }
