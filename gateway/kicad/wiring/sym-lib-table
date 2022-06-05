@@ -1,0 +1,6 @@
+(sym_lib_table
+  (lib (name "arduino-pro-mini")(type "KiCad")(uri "D:/git/temp/kicad-libraries/arduino-pro-mini.kicad_sym")(options "")(descr ""))
+  (lib (name "nRF24L01+")(type "Legacy")(uri "D:/git/temp/myelin-kicad-libraries/nRF24L01+.lib")(options "")(descr ""))
+  (lib (name "sensors")(type "Legacy")(uri "D:/git/temp/kicad-lib/sensors.lib")(options "")(descr ""))
+  (lib (name "ARDUINO_PRO_MINI")(type "Legacy")(uri "D:/Download/ARDUINO_PRO_MINI/ARDUINO_PRO_MINI.lib")(options "")(descr ""))
+)

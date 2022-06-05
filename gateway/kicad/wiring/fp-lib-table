@@ -1,0 +1,5 @@
+(fp_lib_table
+  (lib (name "Sensors")(type "KiCad")(uri "D:/git/temp/kicad-lib/Sensors.pretty")(options "")(descr ""))
+  (lib (name "myelin-kicad-libraries")(type "KiCad")(uri "D:/git/temp/myelin-kicad-libraries")(options "")(descr ""))
+  (lib (name "ARDUINO_PRO_MINI")(type "KiCad")(uri "D:/Download/ARDUINO_PRO_MINI")(options "")(descr ""))
+)

@@ -32,5 +32,9 @@ Used Hardware
 ## Wiring
 https://forum.arduino.cc/t/bme280-sensor-i2c-connection-with-arduino-pro-mini-5v-problem/550516
 
+- libs for download:
+    - https://www.snapeda.com/parts/ESP32-DEVKIT-V1/Do%20it/view-part/
+    - https://www.snapeda.com/parts/Arduino%20Pro%20Mini/Arduino/view-part/?ref=search&t=arduino%20pro%20mini
+
 ## Programming
 !Attention! After pressing the upload button press the reset button on the Arduino pro mini.
