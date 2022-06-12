@@ -13,14 +13,12 @@
 struct BME_VALUES {char humidity[6]; char pressure[8]; char altitude[6]; char temperature[6];};
 
 // Function Declarations
-String GetArduinoUniqueID();
 double ReadVccInV();
 void Log(String logMessage);
 BME_VALUES ReadBmeValues();
 
 // Constants
 const bool DEBUG = true;                        // Set true to activate serial messages, false in final code.
-const String ARDUINO_ID = GetArduinoUniqueID(); // The unique Arduino ID
 const uint16_t receiverAddress = 00;            // Address of the other node (gateway) in Octal format TODO: Rename variable name
 const uint16_t senderAddress = 01;              // Address of our node (sensor) in Octal format
 
@@ -80,7 +78,7 @@ void loop()
     // }
     char json[251];
     uint16_t jsonLength = sizeof(json);
-    snprintf_P(json, jsonLength, PSTR("{\"DeviceID\":\"%s\",\"BatteryVoltageValue\":%s,\"BatteryVoltageUnit\":\"V\",\"SensorType\":\"BME280\",\"TemperatureValue\":%s,\"TemperatureUnit\":\"°C\",\"HumidityValue\":%s,\"HumidityUnit\":\"%%\",\"PressureValue\":%s,\"PressureUnit\":\"hPa\"}"), ARDUINO_ID.c_str(), String(ReadVccInV()).c_str(), sensorValues.temperature, sensorValues.humidity, sensorValues.pressure);
+    snprintf_P(json, jsonLength, PSTR("{\"DeviceID\":\"%s\",\"BatteryVoltageValue\":%s,\"BatteryVoltageUnit\":\"V\",\"SensorType\":\"BME280\",\"TemperatureValue\":%s,\"TemperatureUnit\":\"°C\",\"HumidityValue\":%s,\"HumidityUnit\":\"%%\",\"PressureValue\":%s,\"PressureUnit\":\"hPa\"}"), String(senderAddress).c_str(), String(ReadVccInV()).c_str(), sensorValues.temperature, sensorValues.humidity, sensorValues.pressure);
 
     radio.powerUp();  // Wake up the RF24 from sleep mode
     network.update(); // Check if the network is up and ready    
@@ -107,18 +105,6 @@ void loop()
   // Sleep
   // For more information on the different types of sleep mode refer to: https://elektro.turanis.de/html/prj270/index.html
   LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
-}
-
-// Function to get the ArduinoUniqueID
-String GetArduinoUniqueID(){
-  String id = "";
-  for (size_t i = 0; i < UniqueIDsize; i++)
-	{
-		if (UniqueID[i] < 0x10)
-      id += "0";
-		id += String(UniqueID[i]);
-	}
-  return id;
 }
 
 // Reads the Voltage in mV
